@@ -37,7 +37,7 @@
             border-radius: 4px;
             font-size: 16px;
         }
-        button {
+        .search-btn {
             padding: 8px 24px;
             background: #1a73e8;
             color: white;
@@ -46,24 +46,8 @@
             cursor: pointer;
             font-size: 16px;
         }
-        button:hover {
+        .search-btn:hover {
             background: #1557b0;
-        }
-        .preview {
-            width: 400px;
-            height: 400px;
-            margin: 30px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            transition: background-color 0.3s;
-        }
-        .preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            image-rendering: pixelated;
         }
         .bg-controls {
             display: flex;
@@ -78,14 +62,14 @@
             border-radius: 4px;
             cursor: pointer;
             background: white;
+            color: black;
             font-size: 14px;
         }
         .bg-button:hover {
             background: #f5f5f5;
         }
         .bg-button.active {
-            background: #1a73e8;
-            color: white;
+            background: #e3f2fd;
             border-color: #1a73e8;
         }
         .color-picker {
@@ -93,6 +77,23 @@
             width: 100px;
             height: 35px;
             cursor: pointer;
+        }
+        .preview {
+            width: 400px;
+            height: 400px;
+            margin: 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+            border: 1px solid #ddd;
+        }
+        .preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: pixelated;
         }
         .info {
             text-align: center;
@@ -105,7 +106,13 @@
             margin: 10px 0;
         }
         .download-btn {
+            padding: 8px 24px;
             background: #34a853;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
             margin-top: 20px;
         }
         .download-btn:hover {
@@ -117,26 +124,26 @@
     <div class="container">
         <h1>Nodemonkes</h1>
         
-        <div class="search-box">
+        <form class="search-box" onsubmit="searchNFT(event)">
             <input type="text" id="search" placeholder="Enter ID or Inscription number">
-            <button onclick="searchNFT()">Search</button>
-        </div>
+            <button type="submit" class="search-btn">Search</button>
+        </form>
 
         <div id="error" class="error"></div>
 
-        <div id="result" style="display:none">
+        <div id="result">
             <div class="bg-controls">
-                <button class="bg-button active" onclick="setBackground('transparent', this)">No Background</button>
-                <button class="bg-button" onclick="setBackground('rgb(16, 56, 59)', this)">Christmas Green</button>
-                <button class="bg-button" onclick="setBackground('black', this)">Black</button>
-                <input type="color" class="color-picker" onchange="setCustomBackground(this.value, this)" title="Choose custom color">
+                <button type="button" class="bg-button active" onclick="setBackground('transparent', this)">No Background</button>
+                <button type="button" class="bg-button" onclick="setBackground('rgb(16, 56, 59)', this)">Christmas Green</button>
+                <button type="button" class="bg-button" onclick="setBackground('black', this)">Black</button>
+                <input type="color" class="color-picker" oninput="setCustomBackground(this.value, this)" title="Choose custom color">
             </div>
 
             <div id="preview" class="preview">
-                <img id="nftImage">
+                <img id="nftImage" style="display: none">
             </div>
 
-            <div class="info">
+            <div id="info" class="info" style="display: none">
                 <h2 id="nftId"></h2>
                 <p>Inscription: <span id="inscription"></span></p>
                 <p>Rarity Score: <span id="rarity"></span></p>
@@ -154,7 +161,8 @@
             .then(data => metadata = data)
             .catch(() => showError('Failed to load metadata'));
 
-        function searchNFT() {
+        function searchNFT(event) {
+            event.preventDefault();
             const term = document.getElementById('search').value;
             const nft = metadata.find(item => 
                 item.id.toString() === term || 
@@ -165,12 +173,14 @@
                 showNFT(nft);
             } else {
                 showError('NFT not found');
-                document.getElementById('result').style.display = 'none';
+                document.getElementById('nftImage').style.display = 'none';
+                document.getElementById('info').style.display = 'none';
             }
         }
 
         function showNFT(nft) {
-            document.getElementById('result').style.display = 'block';
+            document.getElementById('nftImage').style.display = 'block';
+            document.getElementById('info').style.display = 'block';
             document.getElementById('nftId').textContent = `NODEMONKE #${nft.id}`;
             document.getElementById('inscription').textContent = nft.inscription;
             document.getElementById('rarity').textContent = nft.rarityScore;
@@ -183,9 +193,7 @@
 
         function setBackground(color, button) {
             document.getElementById('preview').style.backgroundColor = color;
-            // Reset all buttons
             document.querySelectorAll('.bg-button').forEach(btn => btn.classList.remove('active'));
-            // Set active state
             if (button.classList.contains('bg-button')) {
                 button.classList.add('active');
             }
@@ -193,7 +201,6 @@
 
         function setCustomBackground(color, input) {
             document.getElementById('preview').style.backgroundColor = color;
-            // Reset all buttons
             document.querySelectorAll('.bg-button').forEach(btn => btn.classList.remove('active'));
         }
 
@@ -203,22 +210,18 @@
             const ctx = canvas.getContext('2d');
             const img = document.getElementById('nftImage');
             
-            // Set high resolution size
             canvas.width = 1000;
             canvas.height = 1000;
             
-            // Set background color
             ctx.fillStyle = document.getElementById('preview').style.backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw image
-            ctx.imageSmoothingEnabled = false; // Keep pixel art style
+            ctx.imageSmoothingEnabled = false;
             const size = Math.min(canvas.width, canvas.height) * 0.8;
             const x = (canvas.width - size) / 2;
             const y = (canvas.height - size) / 2;
             ctx.drawImage(img, x, y, size, size);
             
-            // Download high resolution image
             canvas.toBlob(blob => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
