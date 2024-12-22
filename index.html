@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圣诞节 Nodemonkes</title>
+    <title>Nodemonkes</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 20px;
-            transition: background-color 0.3s;
+            background: rgb(16, 56, 59);
             min-height: 100vh;
-            background: white;
         }
         .container {
             max-width: 500px;
@@ -23,89 +22,109 @@
         }
         h1 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            font-size: 28px;
         }
-        .controls {
+        .search-box {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
         input {
             flex: 1;
-            padding: 8px;
+            padding: 8px 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 16px;
         }
         button {
-            padding: 8px 16px;
-            background: #2563eb;
+            padding: 8px 24px;
+            background: #1a73e8;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
         }
         button:hover {
-            background: #1d4ed8;
-        }
-        select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 20px;
+            background: #1557b0;
         }
         .preview {
-            width: 280px;
-            height: 280px;
-            margin: 20px auto;
+            width: 400px;
+            height: 400px;
+            margin: 30px auto;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 8px;
+            transition: background-color 0.3s;
         }
         .preview img {
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             image-rendering: pixelated;
+        }
+        .bg-controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
         }
         .info {
             text-align: center;
+            font-size: 16px;
+            line-height: 1.6;
         }
         .error {
             color: #dc2626;
             text-align: center;
             margin: 10px 0;
         }
+        .download-btn {
+            background: #34a853;
+            margin-top: 20px;
+        }
+        .download-btn:hover {
+            background: #2d8a46;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>圣诞节 Nodemonkes</h1>
+        <h1>Nodemonkes</h1>
         
-        <div class="controls">
+        <div class="search-box">
             <input type="text" id="search" placeholder="输入 ID 或铭文号">
             <button onclick="searchNFT()">搜索</button>
-            <button onclick="randomNFT()">随机</button>
-        </div>
-
-        <div style="text-align: center">
-            <select onchange="document.body.style.background = this.value">
-                <option value="white">白色背景</option>
-                <option value="rgb(16, 56, 59)">圣诞绿</option>
-                <option value="black">黑色</option>
-            </select>
         </div>
 
         <div id="error" class="error"></div>
 
         <div id="result" style="display:none">
-            <div class="preview">
+            <div class="bg-controls">
+                <select onchange="changeImageBg(this.value)">
+                    <option value="white">白色背景</option>
+                    <option value="rgb(16, 56, 59)">圣诞绿</option>
+                    <option value="black">黑色</option>
+                </select>
+            </div>
+
+            <div id="preview" class="preview" style="background: white;">
                 <img id="nftImage">
             </div>
+
             <div class="info">
                 <h2 id="nftId"></h2>
                 <p>铭文号：<span id="inscription"></span></p>
                 <p>稀有度：<span id="rarity"></span></p>
                 <p>排名：<span id="rank"></span></p>
-                <button onclick="downloadNFT()">下载图片</button>
+                <button onclick="downloadNFT()" class="download-btn">下载图片</button>
             </div>
         </div>
     </div>
@@ -145,20 +164,40 @@
             img.onerror = () => showError('加载图片失败');
         }
 
-        function randomNFT() {
-            if (metadata.length > 0) {
-                const nft = metadata[Math.floor(Math.random() * metadata.length)];
-                document.getElementById('search').value = nft.id;
-                showNFT(nft);
-            }
+        function changeImageBg(color) {
+            document.getElementById('preview').style.backgroundColor = color;
         }
 
         function downloadNFT() {
             const id = document.getElementById('nftImage').src.split('/').pop().split('.')[0];
-            const a = document.createElement('a');
-            a.href = `/SantaHat/images/${id}.png`;
-            a.download = `santahat-${id}.png`;
-            a.click();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = document.getElementById('nftImage');
+            
+            // 设置更大的尺寸以获得高清图片
+            canvas.width = 1000;
+            canvas.height = 1000;
+            
+            // 设置背景色
+            ctx.fillStyle = document.getElementById('preview').style.backgroundColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制图片
+            ctx.imageSmoothingEnabled = false; // 保持像素风格
+            const size = Math.min(canvas.width, canvas.height) * 0.8;
+            const x = (canvas.width - size) / 2;
+            const y = (canvas.height - size) / 2;
+            ctx.drawImage(img, x, y, size, size);
+            
+            // 下载高清图片
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `nodemonke-${id}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
         }
 
         function showError(msg) {
@@ -169,4 +208,3 @@
     </script>
 </body>
 </html>
-
