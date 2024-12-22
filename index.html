@@ -123,10 +123,10 @@
     <div class="container">
         <h1>Nodemonkes</h1>
         
-        <div class="search-box">
+        <form class="search-box" onsubmit="searchNFT(event)">
             <input type="text" id="search" placeholder="Enter ID or Inscription number">
-            <button onclick="searchNFT()" class="search-btn">Search</button>
-        </div>
+            <button type="submit" class="search-btn">Search</button>
+        </form>
 
         <div id="error" class="error"></div>
 
@@ -169,7 +169,8 @@
             .then(data => metadata = data)
             .catch(() => showError('Failed to load metadata'));
 
-        function searchNFT() {
+        function searchNFT(event) {
+            event.preventDefault();
             const term = document.getElementById('search').value;
             const nft = metadata.find(item => 
                 item.id.toString() === term || 
