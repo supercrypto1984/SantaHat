@@ -1,0 +1,32 @@
+name: Unzip Images
+
+on:
+  push:
+    paths:
+      - 'images/*.zip'
+  # 添加手动触发选项
+  workflow_dispatch:
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Unzip files
+      run: |
+        for zip in images/*.zip
+        do
+          unzip -o "$zip" -d images/
+          rm "$zip"
+        done
+    
+    - name: Commit changes
+      run: |
+        git config --local user.email "superjohnson1984@gmail.com"
+        git config --local user.name "supercrypto1984"
+        git add images/
+        git commit -m "Unzip images" || echo "No changes to commit"
+        git push
