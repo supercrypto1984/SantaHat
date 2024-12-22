@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,15 +66,33 @@
             image-rendering: pixelated;
         }
         .bg-controls {
-            text-align: center;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
-        select {
-            padding: 8px 12px;
+        .bg-button {
+            padding: 8px 16px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            cursor: pointer;
+            background: white;
             font-size: 14px;
-            width: 200px;
+        }
+        .bg-button:hover {
+            background: #f5f5f5;
+        }
+        .bg-button.active {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+        .color-picker {
+            padding: 4px;
+            width: 100px;
+            height: 35px;
+            cursor: pointer;
         }
         .info {
             text-align: center;
@@ -100,31 +118,30 @@
         <h1>Nodemonkes</h1>
         
         <div class="search-box">
-            <input type="text" id="search" placeholder="输入 ID 或铭文号">
-            <button onclick="searchNFT()">搜索</button>
+            <input type="text" id="search" placeholder="Enter ID or Inscription number">
+            <button onclick="searchNFT()">Search</button>
         </div>
 
         <div id="error" class="error"></div>
 
         <div id="result" style="display:none">
             <div class="bg-controls">
-                <select onchange="changeImageBg(this.value)">
-                    <option value="white">白色背景</option>
-                    <option value="rgb(16, 56, 59)">圣诞绿</option>
-                    <option value="black">黑色</option>
-                </select>
+                <button class="bg-button active" onclick="setBackground('transparent', this)">No Background</button>
+                <button class="bg-button" onclick="setBackground('rgb(16, 56, 59)', this)">Christmas Green</button>
+                <button class="bg-button" onclick="setBackground('black', this)">Black</button>
+                <input type="color" class="color-picker" onchange="setCustomBackground(this.value, this)" title="Choose custom color">
             </div>
 
-            <div id="preview" class="preview" style="background: white;">
+            <div id="preview" class="preview">
                 <img id="nftImage">
             </div>
 
             <div class="info">
                 <h2 id="nftId"></h2>
-                <p>铭文号：<span id="inscription"></span></p>
-                <p>稀有度：<span id="rarity"></span></p>
-                <p>排名：<span id="rank"></span></p>
-                <button onclick="downloadNFT()" class="download-btn">下载图片</button>
+                <p>Inscription: <span id="inscription"></span></p>
+                <p>Rarity Score: <span id="rarity"></span></p>
+                <p>Rank: <span id="rank"></span></p>
+                <button onclick="downloadNFT()" class="download-btn">Download Image</button>
             </div>
         </div>
     </div>
@@ -135,7 +152,7 @@
         fetch('https://raw.githubusercontent.com/supercrypto1984/SantaHat/main/metadata.json')
             .then(res => res.json())
             .then(data => metadata = data)
-            .catch(() => showError('加载数据失败'));
+            .catch(() => showError('Failed to load metadata'));
 
         function searchNFT() {
             const term = document.getElementById('search').value;
@@ -147,25 +164,37 @@
             if (nft) {
                 showNFT(nft);
             } else {
-                showError('未找到 NFT');
+                showError('NFT not found');
                 document.getElementById('result').style.display = 'none';
             }
         }
 
         function showNFT(nft) {
             document.getElementById('result').style.display = 'block';
-            document.getElementById('nftId').textContent = `NFT #${nft.id}`;
+            document.getElementById('nftId').textContent = `NODEMONKE #${nft.id}`;
             document.getElementById('inscription').textContent = nft.inscription;
             document.getElementById('rarity').textContent = nft.rarityScore;
             document.getElementById('rank').textContent = nft.rank;
             
             const img = document.getElementById('nftImage');
             img.src = `/SantaHat/images/${nft.id}.png`;
-            img.onerror = () => showError('加载图片失败');
+            img.onerror = () => showError('Failed to load image');
         }
 
-        function changeImageBg(color) {
+        function setBackground(color, button) {
             document.getElementById('preview').style.backgroundColor = color;
+            // Reset all buttons
+            document.querySelectorAll('.bg-button').forEach(btn => btn.classList.remove('active'));
+            // Set active state
+            if (button.classList.contains('bg-button')) {
+                button.classList.add('active');
+            }
+        }
+
+        function setCustomBackground(color, input) {
+            document.getElementById('preview').style.backgroundColor = color;
+            // Reset all buttons
+            document.querySelectorAll('.bg-button').forEach(btn => btn.classList.remove('active'));
         }
 
         function downloadNFT() {
@@ -174,22 +203,22 @@
             const ctx = canvas.getContext('2d');
             const img = document.getElementById('nftImage');
             
-            // 设置更大的尺寸以获得高清图片
+            // Set high resolution size
             canvas.width = 1000;
             canvas.height = 1000;
             
-            // 设置背景色
+            // Set background color
             ctx.fillStyle = document.getElementById('preview').style.backgroundColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 绘制图片
-            ctx.imageSmoothingEnabled = false; // 保持像素风格
+            // Draw image
+            ctx.imageSmoothingEnabled = false; // Keep pixel art style
             const size = Math.min(canvas.width, canvas.height) * 0.8;
             const x = (canvas.width - size) / 2;
             const y = (canvas.height - size) / 2;
             ctx.drawImage(img, x, y, size, size);
             
-            // 下载高清图片
+            // Download high resolution image
             canvas.toBlob(blob => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
