@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圣诞节 Nodemonkes</title>
+    <title>Nodemonkes</title>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 20px;
-            transition: background-color 0.3s;
+            background: rgb(16, 56, 59);
             min-height: 100vh;
-            background: white;
         }
         .container {
             max-width: 500px;
@@ -23,18 +22,20 @@
         }
         h1 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            font-size: 28px;
         }
-        .controls {
+        .search-box {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
         input {
             flex: 1;
-            padding: 8px;
+            padding: 8px 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 16px;
         }
         .search-btn {
             padding: 8px 24px;
@@ -45,86 +46,118 @@
             cursor: pointer;
             font-size: 16px;
         }
-        .download-btn {
-            padding: 8px 24px;
-            background: #34a853;
-            color: black;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
-        }
-        button {
-            padding: 8px 16px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #1d4ed8;
-        }
-        select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
         .preview {
-            width: 280px;
-            height: 280px;
-            margin: 20px auto;
+            width: 400px;
+            height: 400px;
+            margin: 30px auto;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 8px;
+            transition: background-color 0.3s;
         }
         .preview img {
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             image-rendering: pixelated;
+        }
+        .bg-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .bg-button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            background: white;
+            color: black;
+            font-size: 14px;
+        }
+        .bg-button:hover {
+            background: #f5f5f5;
+        }
+        .bg-button.active {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+        .color-picker {
+            padding: 4px;
+            width: 100px;
+            height: 35px;
+            cursor: pointer;
         }
         .info {
             text-align: center;
+            font-size: 16px;
+            line-height: 1.6;
         }
         .error {
             color: #dc2626;
             text-align: center;
             margin: 10px 0;
         }
+        .download-btn {
+            background: #34a853;
+            color: white;
+            margin-top: 20px;
+        }
+        .download-btn:hover {
+            background: #2d8a46;
+        }
+        .resolution-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 200px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>圣诞节 Nodemonkes</h1>
+        <h1>Nodemonkes</h1>
         
-        <form class="search-box" onsubmit="searchNFT(event)">
+        <div class="search-box">
             <input type="text" id="search" placeholder="Enter ID or Inscription number">
-            <button type="submit" class="search-btn">Search</button>
-        </form>
-
-        <button onclick="randomNFT()">随机</button>
-
-        <div style="text-align: center">
-            <select onchange="document.body.style.background = this.value">
-                <option value="white">白色背景</option>
-                <option value="rgb(16, 56, 59)">圣诞绿</option>
-                <option value="black">黑色</option>
-            </select>
+            <button onclick="searchNFT()" class="search-btn">Search</button>
         </div>
 
         <div id="error" class="error"></div>
 
-        <div id="preview" class="preview">
-            <img id="nftImage" style="display: none">
-        </div>
-        <div id="info" style="display:none">
-            <h2 id="nftId"></h2>
-            <p>铭文号：<span id="inscription"></span></p>
-            <p>稀有度：<span id="rarity"></span></p>
-            <p>排名：<span id="rank"></span></p>
-            <button onclick="downloadNFT()" class="download-btn">下载图片</button>
+        <div id="result" style="display:none">
+            <div class="bg-controls">
+                <button class="bg-button active" onclick="setBackground('transparent', this)">No Background</button>
+                <button class="bg-button" onclick="setBackground('rgb(16, 56, 59)', this)">Christmas Green</button>
+                <button class="bg-button" onclick="setBackground('black', this)">Black</button>
+                <input type="color" class="color-picker" oninput="setCustomBackground(this.value, this)" title="Choose custom color">
+            </div>
+
+            <div id="preview" class="preview">
+                <img id="nftImage">
+            </div>
+
+            <div class="info">
+                <h2 id="nftId"></h2>
+                <p>Inscription: <span id="inscription"></span></p>
+                <p>Rarity Score: <span id="rarity"></span></p>
+                <p>Rank: <span id="rank"></span></p>
+                <select id="resolution" class="resolution-select">
+                    <option value="560">560 x 560</option>
+                    <option value="840">840 x 840</option>
+                    <option value="1120">1120 x 1120</option>
+                    <option value="1400">1400 x 1400</option>
+                    <option value="1680">1680 x 1680</option>
+                    <option value="2240">2240 x 2240</option>
+                    <option value="2800">2800 x 2800</option>
+                </select>
+                <button onclick="downloadNFT()" class="download-btn">Download Image</button>
+            </div>
         </div>
     </div>
 
@@ -134,10 +167,9 @@
         fetch('https://raw.githubusercontent.com/supercrypto1984/SantaHat/main/metadata.json')
             .then(res => res.json())
             .then(data => metadata = data)
-            .catch(() => showError('加载数据失败'));
+            .catch(() => showError('Failed to load metadata'));
 
-        function searchNFT(event) {
-            event.preventDefault();
+        function searchNFT() {
             const term = document.getElementById('search').value;
             const nft = metadata.find(item => 
                 item.id.toString() === term || 
@@ -148,30 +180,36 @@
                 showNFT(nft);
             } else {
                 showError('NFT not found');
-                document.getElementById('nftImage').style.display = 'none';
-                document.getElementById('info').style.display = 'none';
+                document.getElementById('result').style.display = 'none';
             }
         }
 
         function showNFT(nft) {
-            document.getElementById('info').style.display = 'block';
-            document.getElementById('nftId').textContent = `NFT #${nft.id}`;
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('nftId').textContent = `NODEMONKE #${nft.id}`;
             document.getElementById('inscription').textContent = nft.inscription;
             document.getElementById('rarity').textContent = nft.rarityScore;
             document.getElementById('rank').textContent = nft.rank;
             
             const img = document.getElementById('nftImage');
             img.src = `/SantaHat/images/${nft.id}.png`;
-            img.style.display = 'block';
-            img.onerror = () => showError('加载图片失败');
+            img.onerror = () => showError('Failed to load image');
         }
 
-        function randomNFT() {
-            if (metadata.length > 0) {
-                const nft = metadata[Math.floor(Math.random() * metadata.length)];
-                document.getElementById('search').value = nft.id;
-                showNFT(nft);
+        function setBackground(color, button) {
+            document.getElementById('preview').style.backgroundColor = color;
+            // Reset all buttons
+            document.querySelectorAll('.bg-button').forEach(btn => btn.classList.remove('active'));
+            // Set active state
+            if (button.classList.contains('bg-button')) {
+                button.classList.add('active');
             }
+        }
+
+        function setCustomBackground(color, input) {
+            document.getElementById('preview').style.backgroundColor = color;
+            // Reset all buttons
+            document.querySelectorAll('.bg-button').forEach(btn => btn.classList.remove('active'));
         }
 
         function downloadNFT() {
@@ -179,24 +217,26 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = document.getElementById('nftImage');
-    
-            // Set canvas size to 560x560 (20 times the original 28x28)
-            canvas.width = 560;
-            canvas.height = 560;
-    
-            // Fill background
-            ctx.fillStyle = document.body.style.background || 'white';
+            
+            // Get selected resolution
+            const size = parseInt(document.getElementById('resolution').value);
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Set background color
+            ctx.fillStyle = document.getElementById('preview').style.backgroundColor || 'transparent';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-            // Draw image at full size
-            ctx.imageSmoothingEnabled = false;
+            
+            // Draw image
+            ctx.imageSmoothingEnabled = false; // Keep pixel art style
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    
+            
+            // Download high resolution image
             canvas.toBlob(blob => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `nodemonke-${id}.png`;
+                a.download = `nodemonke-${id}-${size}x${size}.png`;
                 a.click();
                 URL.revokeObjectURL(url);
             }, 'image/png');
