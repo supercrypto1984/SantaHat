@@ -1,38 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Christmas Nodemonkes</title>
+    <title>圣诞节 Nodemonkes</title>
     <style>
         body {
-            margin: 0;
             font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s;
+            min-height: 100vh;
             background: white;
         }
         .container {
             max-width: 500px;
             margin: 0 auto;
-            padding: 20px;
-        }
-        .card {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         h1 {
             text-align: center;
             margin-bottom: 20px;
         }
-        .search-form {
+        .controls {
             display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
         input {
             flex: 1;
-            padding: 8px 12px;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
@@ -47,23 +47,16 @@
         button:hover {
             background: #1d4ed8;
         }
-        button.outline {
-            background: white;
+        select {
+            padding: 8px;
             border: 1px solid #ddd;
-            color: #333;
-        }
-        button.outline:hover {
-            background: #f9fafb;
-        }
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
         }
         .preview {
             width: 280px;
             height: 280px;
-            margin: 0 auto 16px;
+            margin: 20px auto;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -73,145 +66,107 @@
             max-height: 100%;
             image-rendering: pixelated;
         }
+        .info {
+            text-align: center;
+        }
         .error {
             color: #dc2626;
             text-align: center;
-            margin: 8px 0;
-        }
-        .nft-info {
-            text-align: center;
-        }
-        select {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="card">
-            <h1>Christmas Nodemonkes</h1>
-            
-            <form class="search-form" id="searchForm">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Enter ID or Inscription number"
-                >
-                <button type="submit">Search</button>
-            </form>
+        <h1>圣诞节 Nodemonkes</h1>
+        
+        <div class="controls">
+            <input type="text" id="search" placeholder="输入 ID 或铭文号">
+            <button onclick="searchNFT()">搜索</button>
+            <button onclick="randomNFT()">随机</button>
+        </div>
 
-            <div class="controls">
-                <select id="bgColor">
-                    <option value="white">White</option>
-                    <option value="rgb(16, 56, 59)">Christmas Green</option>
-                    <option value="black">Black</option>
-                </select>
-                <button class="outline" id="randomBtn">Random</button>
+        <div style="text-align: center">
+            <select onchange="document.body.style.background = this.value">
+                <option value="white">白色背景</option>
+                <option value="rgb(16, 56, 59)">圣诞绿</option>
+                <option value="black">黑色</option>
+            </select>
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <div id="result" style="display:none">
+            <div class="preview">
+                <img id="nftImage">
             </div>
-
-            <div id="error" class="error"></div>
-
-            <div id="nftDisplay" style="display: none;">
-                <div class="preview">
-                    <img id="nftImage">
-                </div>
-                <div class="nft-info">
-                    <h2 id="nftTitle"></h2>
-                    <p>Inscription: <span id="nftInscription"></span></p>
-                    <p>Rarity Score: <span id="nftRarity"></span></p>
-                    <p>Rank: <span id="nftRank"></span></p>
-                    <button id="downloadBtn">Download</button>
-                </div>
+            <div class="info">
+                <h2 id="nftId"></h2>
+                <p>铭文号：<span id="inscription"></span></p>
+                <p>稀有度：<span id="rarity"></span></p>
+                <p>排名：<span id="rank"></span></p>
+                <button onclick="downloadNFT()">下载图片</button>
             </div>
         </div>
     </div>
 
     <script>
         let metadata = [];
-        const baseUrl = '/SantaHat';
-
-        // 加载元数据
+        
         fetch('https://raw.githubusercontent.com/supercrypto1984/SantaHat/main/metadata.json')
             .then(res => res.json())
-            .then(data => {
-                metadata = data;
-            })
-            .catch(() => showError('Failed to load metadata'));
+            .then(data => metadata = data)
+            .catch(() => showError('加载数据失败'));
 
-        // 显示 NFT
-        function displayNFT(nft) {
-            document.getElementById('nftDisplay').style.display = 'block';
-            document.getElementById('nftTitle').textContent = `NFT #${nft.id}`;
-            document.getElementById('nftInscription').textContent = nft.inscription;
-            document.getElementById('nftRarity').textContent = nft.rarityScore;
-            document.getElementById('nftRank').textContent = nft.rank;
-            
-            const img = document.getElementById('nftImage');
-            img.src = `${baseUrl}/images/${nft.id}.png`;
-            img.onerror = () => showError('Failed to load image');
-        }
-
-        // 显示错误信息
-        function showError(message) {
-            document.getElementById('error').textContent = message;
-            setTimeout(() => {
-                document.getElementById('error').textContent = '';
-            }, 3000);
-        }
-
-        // 搜索处理
-        document.getElementById('searchForm').onsubmit = (e) => {
-            e.preventDefault();
-            const searchTerm = document.getElementById('searchInput').value;
-            
+        function searchNFT() {
+            const term = document.getElementById('search').value;
             const nft = metadata.find(item => 
-                item.id.toString() === searchTerm || 
-                item.inscription.toString() === searchTerm
+                item.id.toString() === term || 
+                item.inscription.toString() === term
             );
 
             if (nft) {
-                displayNFT(nft);
-                document.getElementById('error').textContent = '';
+                showNFT(nft);
             } else {
-                showError('NFT not found');
-                document.getElementById('nftDisplay').style.display = 'none';
+                showError('未找到 NFT');
+                document.getElementById('result').style.display = 'none';
             }
-        };
+        }
 
-        // 随机 NFT
-        document.getElementById('randomBtn').onclick = () => {
+        function showNFT(nft) {
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('nftId').textContent = `NFT #${nft.id}`;
+            document.getElementById('inscription').textContent = nft.inscription;
+            document.getElementById('rarity').textContent = nft.rarityScore;
+            document.getElementById('rank').textContent = nft.rank;
+            
+            const img = document.getElementById('nftImage');
+            img.src = `/SantaHat/images/${nft.id}.png`;
+            img.onerror = () => showError('加载图片失败');
+        }
+
+        function randomNFT() {
             if (metadata.length > 0) {
-                const randomNFT = metadata[Math.floor(Math.random() * metadata.length)];
-                document.getElementById('searchInput').value = randomNFT.id;
-                displayNFT(randomNFT);
+                const nft = metadata[Math.floor(Math.random() * metadata.length)];
+                document.getElementById('search').value = nft.id;
+                showNFT(nft);
             }
-        };
+        }
 
-        // 背景颜色
-        document.getElementById('bgColor').onchange = (e) => {
-            document.body.style.backgroundColor = e.target.value;
-        };
+        function downloadNFT() {
+            const id = document.getElementById('nftImage').src.split('/').pop().split('.')[0];
+            const a = document.createElement('a');
+            a.href = `/SantaHat/images/${id}.png`;
+            a.download = `santahat-${id}.png`;
+            a.click();
+        }
 
-        // 下载图片
-        document.getElementById('downloadBtn').onclick = async () => {
-            const nftId = document.getElementById('nftImage').src.split('/').pop().split('.')[0];
-            try {
-                const response = await fetch(`${baseUrl}/images/${nftId}.png`);
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `santahat-${nftId}.png`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            } catch (error) {
-                showError('Failed to download image');
-            }
-        };
+        function showError(msg) {
+            const error = document.getElementById('error');
+            error.textContent = msg;
+            setTimeout(() => error.textContent = '', 3000);
+        }
     </script>
 </body>
 </html>
+
